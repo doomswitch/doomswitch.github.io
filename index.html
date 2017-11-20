@@ -5,9 +5,22 @@
 	<script type="text/javascript" src="js/main.js"></script>
 </head>
 <body>
-	<div id="myProgress">
-		<div id="myBar"></div>
-	</div>
-	<button onclick="move()">Run</button>
+Progress:
+<div id="outerContainer" class="container">
+	<div id="barContainer">
+		<div id="progressContainer1" class="progressContainer">
+	  		<div id="progressBar1" class="progressBar"></div>
+		</div>
+		<button onclick="beginFill('progressBar1', 1)" style="display: inline;">Click Me</button>
+    </div>
+    
+    <div id="barContainer2">
+    	<div id="progressContainer2" class="progressContainer">
+        	<div id="progressBar2" class="progressBar"></div>
+        </div>
+        <button onclick="beginFill('progressBar2', 1)" style="display: inline;">Click Me too!</button>
+    </div>
+</div>
+
 </body>
 </html>
