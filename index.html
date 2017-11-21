@@ -5,21 +5,34 @@
 	<script type="text/javascript" src="js/main.js"></script>
 </head>
 <body>
-Progress:
+Testing Git
 <div id="outerContainer" class="container">
-	<div id="barContainer">
-		<div id="progressContainer1" class="progressContainer">
-	  		<div id="progressBar1" class="progressBar"></div>
-		</div>
-		<button onclick="beginFill('progressBar1', 1)" style="display: inline;">Click Me</button>
-    </div>
-    
-    <div id="barContainer2">
-    	<div id="progressContainer2" class="progressContainer">
-        	<div id="progressBar2" class="progressBar"></div>
-        </div>
-        <button onclick="beginFill('progressBar2', 1)" style="display: inline;">Click Me too!</button>
-    </div>
+	<table>
+		<tr>
+			<td>
+				<div id="barContainer">
+					<div id="progressContainer1" class="progressContainer">
+				  		<div id="progressBar1" class="progressBar"></div>
+					</div>
+		    	</div>
+		    </td>
+		    <td>
+		    	<button onclick="beginFill('progressBar1', 1)" style="display: inline;">Click Me</button>
+		    </td>
+	    </tr>
+	    <tr>
+	    	<td>
+			    <div id="barContainer2">
+			    	<div id="progressContainer2" class="progressContainer">
+			        	<div id="progressBar2" class="progressBar"></div>
+			        </div>
+			    </div>
+			</td>
+			<td>
+		    	<button onclick="beginFill('progressBar2', 1)" style="display: inline;">Click Me too!</button>
+		    </td>
+		</tr>
+	</table>
 </div>
 
 </body>
