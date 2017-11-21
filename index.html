@@ -11,7 +11,7 @@
 	<table style="border: 1px solid black;">
 		<tr>
 			<td>
-				<button onclick="buy(1)">Ancient Heroes: $20</button>
+				<button onclick="buy(1)" id="buyGameButton">Ancient Heroes: $20</button>
 			</td>
 		</tr>
 	</table>
@@ -33,25 +33,28 @@
 			<td>
 				<div id="barContainer">
 					<div id="progressContainer1" class="progressContainer">
-				  		<div id="progressBar1" class="progressBar"></div>
+				  		<div id="playGameProgressBar" class="progressBar"></div>
 					</div>
 		    	</div>
 		    </td>
 		    <td>
-		    	<button onclick="beginFill('progressBar1', 1)" style="display: inline;">Click Me</button>
+		    	<button onclick="beginFill(0)" style="display: inline;">Click Me</button>
 		    </td>
 	    </tr>
-	    <tr>
-	    	<td>
-			    <div id="barContainer2">
-			    	<div id="progressContainer2" class="progressContainer">
-			        	<div id="progressBar2" class="progressBar"></div>
-			        </div>
-			    </div>
-			</td>
-			<td>
-		    	<button onclick="beginFill('progressBar2', 1)" style="display: inline;">Click Me</button>
-		    </td>
+	</table>
+</div>
+
+<div id="accountStatsContainer" class="container">
+	ACCOUNT STATS
+	<table style="border: 1px solid black;">
+		<tr>
+			<td>Games played:</td><td id="statsDisplayGamesPlayed">0</td>
+		</tr>
+		<tr>
+			<td>Games won:</td><td id="statsDisplayGamesWon">0</td>
+		</tr>
+		<tr>
+			<td>Games lost:</td><td id="statsDisplayGamesLost">0</td>
 		</tr>
 	</table>
 </div>

@@ -1,5 +1,7 @@
 var stats = {};
 var costs = {};
+var progressBarMap = {};
+var progressBarTimesInSeconds = {};
 
 function initializeGame()
 {
@@ -11,14 +13,19 @@ function initializeGame()
 
     stats['cash'] = 20;
     stats['accountActive'] = false;
+    stats['totalGamesPlayed'] = 0;
+    
+    stats['account'] = {};
+    stats['account']['gamesPlayed'] = 0;
+    stats['account']['gamesWon'] = 0;
+    stats['account']['gamesLost'] = 0;
+
+    progressBarMap[0] = "playGameProgressBar";
+    progressBarTimesInSeconds[0] = 1;
 
     // load save stuff
 
-    if(stats['accountActive'] === true)
-    {
-        var playGameDiv = document.getElementById('playGameContainer');
-        playGameDiv.style.visibility = 'visible';
-    }
+    updateStats();
 }
 
 function updateStats()
@@ -28,9 +35,26 @@ function updateStats()
 
     if(stats['accountActive'] === true)
     {
-        var playGameDiv = document.getElementById('playGameContainer');
-        playGameDiv.style.visibility = 'visible';
+        updateAccountStats();
     }
+}
+
+function updateAccountStats()
+{
+    var elem = document.getElementById('playGameContainer');
+    elem.style.visibility = 'visible';
+
+    elem = document.getElementById('buyGameButton');
+    elem.disabled = true;
+
+    elem = document.getElementById('statsDisplayGamesPlayed');
+    elem.innerText = stats['account']['gamesPlayed'];
+
+    elem = document.getElementById('statsDisplayGamesWon');
+    elem.innerText = stats['account']['gamesWon'];
+
+    elem = document.getElementById('statsDisplayGamesLost');
+    elem.innerText = stats['account']['gamesLost'];
 }
 
 function buy(productId)
@@ -63,11 +87,11 @@ function buy(productId)
     updateStats();
 }
 
-function beginFill(barName, fillTimeInSeconds)
+function beginFill(buttonId)
 {
-	var elem = document.getElementById(barName);
+	var progressBarElem = document.getElementById(progressBarMap[buttonId]);
     var width = 1;
-    var interval = fillTimeInSeconds * 10; // *1000 for ms, /100 for 100 ticks
+    var interval = progressBarTimesInSeconds[buttonId] * 10; // *1000 for ms, /100 for 100 ticks
     var intervalId = setInterval(frame, interval);
     
     function frame()
@@ -75,10 +99,42 @@ function beginFill(barName, fillTimeInSeconds)
     	if(width >= 100) {
         	clearInterval(intervalId);
             width = 1;
+            procComplete(buttonId);
         } else {
         	width++;
         }
         
-        elem.style.width = width + '%';
+        progressBarElem.style.width = width + '%';
+    }
+}
+
+function procComplete(id)
+{
+    switch(id) {
+        case 0:
+        {
+            // played a game
+            stats['account']['gamesPlayed']++;
+            stats['totalGamesPlayed']++;
+
+            // win or lose?
+            var winRate = .8;
+            var result = Math.random();
+            if(result > winRate)
+            {
+                stats['account']['gamesWon']++;
+            }
+            else
+            {
+                stats['account']['gamesLost']++;
+            }
+
+            updateStats();
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
