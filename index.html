@@ -4,10 +4,31 @@
 	<link rel="stylesheet" href="css/main.css">
 	<script type="text/javascript" src="js/main.js"></script>
 </head>
-<body>
-Testing Git
-<div id="outerContainer" class="container">
-	<table>
+<body onload="initializeGame()">
+
+<div id="marketContainer" class="container">
+	BUY, BUY, BUY
+	<table style="border: 1px solid black;">
+		<tr>
+			<td>
+				<button onclick="buy(1)">Ancient Heroes: $20</button>
+			</td>
+		</tr>
+	</table>
+</div>
+
+<div id="statsContainer" class="container">
+	STATS
+	<table style="border: 1px solid black;">
+		<tr>
+			<td>Cash:</td><td id="statsDisplayCash">$20</td>
+		</tr>
+	</table>
+</div>
+
+<div id="playGameContainer" class="container">
+	PLAY THE GAME
+	<table style="border: 1px solid black;">
 		<tr>
 			<td>
 				<div id="barContainer">
@@ -29,7 +50,7 @@ Testing Git
 			    </div>
 			</td>
 			<td>
-		    	<button onclick="beginFill('progressBar2', 1)" style="display: inline;">Click Me too!</button>
+		    	<button onclick="beginFill('progressBar2', 1)" style="display: inline;">Click Me</button>
 		    </td>
 		</tr>
 	</table>
