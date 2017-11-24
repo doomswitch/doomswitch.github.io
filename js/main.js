@@ -2,6 +2,7 @@ var stats = {};
 var progressBarMap = {};
 var buttonMap = {};
 var progressBarTimesInSeconds = {};
+var timeSinceLastImprovement = {};
 
 function initializeGame()
 {
@@ -36,6 +37,9 @@ function initializeGame()
     progressBarMap['playGame'] = "playGameProgressBar";
     progressBarTimesInSeconds['playGame'] = 1;
     buttonMap['playGame'] = "playGameButton";
+
+    timeSinceLastImprovement['lastHitting'] = 0;
+    timeSinceLastImprovement['skillshots'] = 0;
 
     // load save stuff
 
@@ -149,65 +153,101 @@ function beginFill(buttonName)
     }
 }
 
+function processPlayGame()
+{
+    stats['account']['gamesPlayed']++;
+    stats['misc']['totalGamesPlayed']++;
+
+    // win or lose?
+    var winRate = .8;
+    var result = Math.random();
+    if(result > winRate)
+    {
+        stats['account']['gamesWon']++;
+        stats['account']['mmr'] += 1;
+    }
+    else
+    {
+        stats['account']['gamesLost']++;
+        stats['account']['mmr'] -= 2;
+        if(stats['account']['mmr'] < 0) { stats['account']['mmr'] = 0; }
+    }
+
+    if(stats['misc']['totalGamesPlayed'] >= 5 && stats['personal']['improvementsEnabled'] == false)
+    {
+        stats['personal']['improvementsEnabled'] = true;
+    }
+
+    // did we have a focus?
+    var focusButtons = document.getElementsByName("playGameFocus");
+    var selectedFocus = null;
+    var selectedFocusValue = "";
+
+    for(var i = 0; i < focusButtons.length; i++)
+    {
+        if(focusButtons[i].checked)
+        {
+            selectedFocus = focusButtons[i];
+            selectedFocusValue = focusButtons[i].value;
+        }
+    }
+
+    if(stats['personal']['improvementsEnabled'])
+    {
+        if(selectedFocus != null && selectedFocusValue != "")
+        {
+            if(selectedFocusValue == "lastHitting") 
+            { 
+                stats['personal']['lastHitting']++;
+                timeSinceLastImprovement['lastHitting'] = 0;
+            }
+            else if(selectedFocusValue == "skillshots")
+            {
+                stats['personal']['skillshots']++;
+                timeSinceLastImprovement['skillshots'] = 0;
+            }
+        }
+    }
+
+    var button = document.getElementById(buttonMap['playGame']);
+    button.disabled = false;
+}
+
+function passTime()
+{
+    // personal stat decay
+    tickStatDecay();
+}
+
+function tickStatDecay()
+{
+    timeSinceLastImprovement['lastHitting']++;
+    timeSinceLastImprovement['skillshots']++;
+
+    if(timeSinceLastImprovement['lastHitting'] >= 4)
+    {
+        stats['personal']['lastHitting']--;
+        if(stats['personal']['lastHitting'] <= 0) { stats['personal']['lastHitting'] = 0; }
+    }
+
+    if(timeSinceLastImprovement['skillshots'] >= 4)
+    {
+        stats['personal']['skillshots']--;
+        if(stats['personal']['skillshots'] <= 0) { stats['personal']['skillshots'] = 0; }
+    }
+}
+
 function procComplete(buttonName)
 {
+    // step 1 - process whatever just completed
     if(buttonName == "playGame")
     {
-        stats['account']['gamesPlayed']++;
-        stats['misc']['totalGamesPlayed']++;
-
-        // win or lose?
-        var winRate = .8;
-        var result = Math.random();
-        if(result > winRate)
-        {
-            stats['account']['gamesWon']++;
-            stats['account']['mmr'] += 1;
-        }
-        else
-        {
-            stats['account']['gamesLost']++;
-            stats['account']['mmr'] -= 2;
-            if(stats['account']['mmr'] < 0) { stats['account']['mmr'] = 0; }
-        }
-
-        if(stats['misc']['totalGamesPlayed'] >= 5 && stats['personal']['improvementsEnabled'] == false)
-        {
-            stats['personal']['improvementsEnabled'] = true;
-        }
-
-        // did we have a focus?
-        var focusButtons = document.getElementsByName("playGameFocus");
-        var selectedFocus = null;
-        var selectedFocusValue = "";
-
-        for(var i = 0; i < focusButtons.length; i++)
-        {
-            if(focusButtons[i].checked)
-            {
-                selectedFocus = focusButtons[i];
-                selectedFocusValue = focusButtons[i].value;
-            }
-        }
-
-        if(stats['personal']['improvementsEnabled'])
-        {
-            if(selectedFocus != null && selectedFocusValue != "")
-            {
-                if(selectedFocusValue == "lastHitting") 
-                { 
-                    stats['personal']['lastHitting']++;
-                }
-                else if(selectedFocusValue == "skillshots")
-                {
-                    stats['personal']['skillshots']++;
-                }
-            }
-        }
-
-        var button = document.getElementById(buttonMap[buttonName]);
-        button.disabled = false;
-
-        updateStats();
+        processPlayGame();
     }
+
+    // step 2 - pass time
+    passTime();
+
+    // step 3 - update stats
+    updateStats();
 }
