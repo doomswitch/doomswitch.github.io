@@ -1,10 +1,10 @@
 - disable focus buttons while game is being played?
 - number tweaking
 - change numerical value on personal stats to percentage bars?
-
-** WORK **
-- living cost
-- # of ticks per cycle (month?)
-
+- revisit 500 as the magic bucket number in win rate calc
+- e.v. for mmr
+--- random mmr opponents
 - mmr decay while not playing
 - sell account
+- living cost, disable game while in the red
+- # of ticks per cycle (month?)
