@@ -1,4 +1,10 @@
-- personal stat decay
-- stats affect mmr
-- mmr affect winrate
 - disable focus buttons while game is being played?
+- number tweaking
+- change numerical value on personal stats to percentage bars?
+
+** WORK **
+- living cost
+- # of ticks per cycle (month?)
+
+- mmr decay while not playing
+- sell account

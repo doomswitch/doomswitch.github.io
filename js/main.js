@@ -3,6 +3,10 @@ var progressBarMap = {};
 var buttonMap = {};
 var progressBarTimesInSeconds = {};
 var timeSinceLastImprovement = {};
+var skMaxMMR = 2500;
+
+// globals
+var skUnlockImprovements = 2;
 
 function initializeGame()
 {
@@ -24,12 +28,18 @@ function initializeGame()
 
     stats['personal'] = {};
     stats['personal']['improvementsEnabled'] = false;
-    stats['personal']['lastHitting'] = 0;
-    stats['personal']['skillshots'] = 0;
-    stats['personal']['denying'] = 0;
+    stats['personal']['skills'] = {};
+    stats['personal']['skills']['lastHitting'] = 0;
+    stats['personal']['skills']['skillshots'] = 0;
+    
+    // not implemented:
+    stats['personal']['skills']['denying'] = 0;
     stats['personal']['championPool'] = 0;
     stats['personal']['itemBuilds'] = 0;
     stats['personal']['metagame'] = 0;
+    // not implemented^
+
+    stats['personal']['winRate'] = .5;
 
     stats['theGame'] = {};
     stats['theGame']['championPool'] = 10;
@@ -44,6 +54,20 @@ function initializeGame()
     // load save stuff
 
     updateStats();
+}
+
+function getPersonalSkillRating()
+{
+    // currently represented by 5 stats, 2 of which are implemented
+    // so total can't be > 1000
+
+    // for now, each stat gives you from 0 to 500 points
+    // todo: require stats to be normally distributed for full effect
+    var ptsLasthitting = (500 * (stats['personal']['skills']['lastHitting'] / 100));
+    var ptsSkillshots = (500 * (stats['personal']['skills']['skillshots'] / 100));
+
+    var total = ptsLasthitting + ptsSkillshots;
+    return total;
 }
 
 function updateStats()
@@ -92,10 +116,10 @@ function updatePersonalStats()
     elem.style.visibility = 'visible';
     
     elem = document.getElementById('statsDisplayLastHitting');
-    elem.innerText = stats['personal']['lastHitting'];
+    elem.innerText = stats['personal']['skills']['lastHitting'];
 
     elem = document.getElementById('statsDisplaySkillshots');
-    elem.innerText = stats['personal']['skillshots'];
+    elem.innerText = stats['personal']['skills']['skillshots'];
 }
 
 function buy(productId)
@@ -153,32 +177,13 @@ function beginFill(buttonName)
     }
 }
 
-function processPlayGame()
+function processImprovements()
 {
-    stats['account']['gamesPlayed']++;
-    stats['misc']['totalGamesPlayed']++;
-
-    // win or lose?
-    var winRate = .8;
-    var result = Math.random();
-    if(result > winRate)
-    {
-        stats['account']['gamesWon']++;
-        stats['account']['mmr'] += 1;
-    }
-    else
-    {
-        stats['account']['gamesLost']++;
-        stats['account']['mmr'] -= 2;
-        if(stats['account']['mmr'] < 0) { stats['account']['mmr'] = 0; }
-    }
-
-    if(stats['misc']['totalGamesPlayed'] >= 5 && stats['personal']['improvementsEnabled'] == false)
+    if(stats['misc']['totalGamesPlayed'] >= skUnlockImprovements && stats['personal']['improvementsEnabled'] == false)
     {
         stats['personal']['improvementsEnabled'] = true;
     }
 
-    // did we have a focus?
     var focusButtons = document.getElementsByName("playGameFocus");
     var selectedFocus = null;
     var selectedFocusValue = "";
@@ -198,16 +203,73 @@ function processPlayGame()
         {
             if(selectedFocusValue == "lastHitting") 
             { 
-                stats['personal']['lastHitting']++;
+                stats['personal']['skills']['lastHitting']++;
+                if(stats['personal']['skills']['lastHitting'] >= 100) { stats['personal']['skills']['lastHitting'] = 100; }
                 timeSinceLastImprovement['lastHitting'] = 0;
             }
             else if(selectedFocusValue == "skillshots")
             {
-                stats['personal']['skillshots']++;
+                stats['personal']['skills']['skillshots']++;
+                if(stats['personal']['skills']['skillshots'] >= 100) { stats['personal']['skills']['skillshots'] = 100; }
                 timeSinceLastImprovement['skillshots'] = 0;
             }
         }
     }
+}
+
+function processMMR(wonGame)
+{
+    if(wonGame)
+    {
+        stats['account']['gamesWon']++;
+        stats['account']['mmr'] += 1;
+    }
+    else
+    {
+        stats['account']['gamesLost']++;
+        stats['account']['mmr'] -= 2;
+        if(stats['account']['mmr'] < 0) { stats['account']['mmr'] = 0; }
+    }
+}
+
+function processWinrate()
+{
+    // calculate new win rate
+    // win rate is a function of personal skill vs. mmr
+    // for now it is simply
+    // .5 + (.5 * (personal - mmr) / 500)
+    // 500 represents the division checkpoints
+    // todo: figure out if that's a correct number to use
+    var newWinRate = .5;
+    var diff = getPersonalSkillRating() - stats['account']['mmr'];
+    if(diff == 0) { return; } // don't need to do anything if we're where we "should" be
+
+    var diffPct = (diff / 500);
+    newWinRate += (.5 * diffPct);
+    stats['personal']['winRate'] = newWinRate;
+
+    console.log("New win rate: " + stats['personal']['winRate']);
+}
+
+function processPlayGame()
+{
+    stats['account']['gamesPlayed']++;
+    stats['misc']['totalGamesPlayed']++;
+
+    // win or lose?
+    var result = Math.random();
+    var wonGame = false;
+    if(result <= stats['personal']['winRate'])
+    {
+        wonGame = true;
+    }
+
+    // process match results
+    processMMR(wonGame);
+    processWinrate();
+
+    // focus/improvements
+    processImprovements();
 
     var button = document.getElementById(buttonMap['playGame']);
     button.disabled = false;
@@ -226,14 +288,14 @@ function tickStatDecay()
 
     if(timeSinceLastImprovement['lastHitting'] >= 4)
     {
-        stats['personal']['lastHitting']--;
-        if(stats['personal']['lastHitting'] <= 0) { stats['personal']['lastHitting'] = 0; }
+        stats['personal']['skills']['lastHitting']--;
+        if(stats['personal']['skills']['lastHitting'] <= 0) { stats['personal']['skills']['lastHitting'] = 0; }
     }
 
     if(timeSinceLastImprovement['skillshots'] >= 4)
     {
-        stats['personal']['skillshots']--;
-        if(stats['personal']['skillshots'] <= 0) { stats['personal']['skillshots'] = 0; }
+        stats['personal']['skills']['skillshots']--;
+        if(stats['personal']['skills']['skillshots'] <= 0) { stats['personal']['skills']['skillshots'] = 0; }
     }
 }
 
