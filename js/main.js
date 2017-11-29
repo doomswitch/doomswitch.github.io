@@ -3,9 +3,13 @@ var progressBarMap = {};
 var buttonMap = {};
 var progressBarTimesInSeconds = {};
 var timeSinceLastImprovement = {};
-var skMaxMMR = 2500;
+var currentAction = 0; // 1 = playing game
+var currentActionIntervalId = 0;
 
-// globals
+// consts
+var skMaxMMR = 2500;
+var skMaxSkillPerCap = 10;
+var skMaxSaltLevel = 100; // this is kemski levels of salt, no human should approach
 var skUnlockImprovements = 2;
 
 function initializeGame()
@@ -31,6 +35,8 @@ function initializeGame()
     stats['personal']['skills'] = {};
     stats['personal']['skills']['lastHitting'] = 0;
     stats['personal']['skills']['skillshots'] = 0;
+    stats['personal']['skillcap'] = 1; // maximum skill = skMaxSkill * skillcap
+    stats['personal']['saltLevel'] = 0;
     
     // not implemented:
     stats['personal']['skills']['denying'] = 0;
@@ -153,20 +159,39 @@ function buy(productId)
     updateStats();
 }
 
+function stopAction(buttonName)
+{
+    clearInterval(currentActionIntervalId);
+    var button = document.getElementById(buttonMap['playGame']);
+    button.value = "PLAY IT";
+    button.onclick = function() { beginFill("playGame"); }
+    var progressBarElem = document.getElementById(progressBarMap['playGame']);
+    progressBarElem.style.width = 0;
+}
+
 function beginFill(buttonName)
 {
-    var button = document.getElementById(buttonMap[buttonName]);
-    button.disabled = true;
+    // whatever we're doing, need to mark the button appropriately
+    if(buttonName == "playGame")
+    {
+        currentAction = 1;
+        var button = document.getElementById(buttonMap['playGame']);
+        button.value = "TAKE A BREAK";
+        button.onclick = function() { stopAction("playGame"); }
+    }
+
+    //var button = document.getElementById(buttonMap[buttonName]);
+    //button.disabled = true;
 
 	var progressBarElem = document.getElementById(progressBarMap[buttonName]);
     var width = 1;
     var interval = progressBarTimesInSeconds[buttonName] * 10; // *1000 for ms, /100 for 100 ticks
-    var intervalId = setInterval(frame, interval);
+    currentActionIntervalId = setInterval(frame, interval);
     
     function frame()
     {
     	if(width >= 100) {
-        	clearInterval(intervalId);
+        	clearInterval(currentActionIntervalId);
             width = 1;
             procComplete(buttonName);
         } else {
@@ -201,16 +226,17 @@ function processImprovements()
     {
         if(selectedFocus != null && selectedFocusValue != "")
         {
+            var skillCap = stats['personal']['skillcap'] * skMaxSkillPerCap;
             if(selectedFocusValue == "lastHitting") 
             { 
                 stats['personal']['skills']['lastHitting']++;
-                if(stats['personal']['skills']['lastHitting'] >= 100) { stats['personal']['skills']['lastHitting'] = 100; }
+                if(stats['personal']['skills']['lastHitting'] >= skillCap) { stats['personal']['skills']['lastHitting'] = skillCap; }
                 timeSinceLastImprovement['lastHitting'] = 0;
             }
             else if(selectedFocusValue == "skillshots")
             {
                 stats['personal']['skills']['skillshots']++;
-                if(stats['personal']['skills']['skillshots'] >= 100) { stats['personal']['skills']['skillshots'] = 100; }
+                if(stats['personal']['skills']['skillshots'] >= skillCap) { stats['personal']['skills']['skillshots'] = skillCap; }
                 timeSinceLastImprovement['skillshots'] = 0;
             }
         }
@@ -271,8 +297,8 @@ function processPlayGame()
     // focus/improvements
     processImprovements();
 
-    var button = document.getElementById(buttonMap['playGame']);
-    button.disabled = false;
+    //var button = document.getElementById(buttonMap['playGame']);
+    //button.disabled = false;
 }
 
 function passTime()
@@ -312,4 +338,18 @@ function procComplete(buttonName)
 
     // step 3 - update stats
     updateStats();
+
+    // step 4 - move on to next action
+    switch(currentAction)
+    {
+        case 1: // playing the game
+        {
+            beginFill("playGame");
+            break;
+        }
+        default: // doing nothing, wait for player input
+        {
+            break;
+        }
+    }
 }
