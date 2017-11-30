@@ -6,6 +6,4 @@
 --- random mmr opponents
 - mmr decay while not playing
 - sell account
-- living cost, disable game while in the red
-- # of ticks per cycle (month?)
 - interval map so we can support multiple bars going at once if we need it (maybe wait until we need it)

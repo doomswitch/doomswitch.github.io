@@ -1,27 +1,32 @@
 var stats = {};
 var progressBarMap = {};
 var buttonMap = {};
+var buttonStringMap = {};
 var progressBarTimesInSeconds = {};
 var timeSinceLastImprovement = {};
 var currentAction = 0; // 1 = playing game
 var currentActionIntervalId = 0;
+var ticksSinceLastCycle = 0;
+var gameDisabled = false;
 
 // consts
 var skMaxMMR = 2500;
 var skMaxSkillPerCap = 10;
 var skMaxSaltLevel = 100; // this is kemski levels of salt, no human should approach
-var skUnlockImprovements = 2;
+var skUnlockImprovements = 5;
+var skTicksPerCycle = 10; // # of ticks before cycle costs are taken (monthly rent, etc)
 
 function initializeGame()
 {
     stats['costs'] = {};
     stats['costs']['newAccount'] = 20;
-    stats['costs']['living'] = 500;
+    stats['costs']['living'] = 100;
 
     stats['misc'] = {};
     stats['misc']['cash'] = 20;
     stats['misc']['accountActive'] = false;
     stats['misc']['totalGamesPlayed'] = 0;
+    stats['misc']['totalCyclesPlayed'] = 0;
     stats['misc']['wage'] = 500;
     
     stats['account'] = {};
@@ -51,8 +56,16 @@ function initializeGame()
     stats['theGame']['championPool'] = 10;
 
     progressBarMap['playGame'] = "playGameProgressBar";
+    progressBarMap['work'] = "workProgressBar";
+
     progressBarTimesInSeconds['playGame'] = 1;
+    progressBarTimesInSeconds['work'] = 1;
+
     buttonMap['playGame'] = "playGameButton";
+    buttonMap['work'] = "workButton";
+
+    buttonStringMap['playGame'] = "PLAY IT";
+    buttonStringMap['work'] = "WORK";
 
     timeSinceLastImprovement['lastHitting'] = 0;
     timeSinceLastImprovement['skillshots'] = 0;
@@ -90,11 +103,20 @@ function updateStats()
     {
         updatePersonalStats();
     }
+
+    // if the game's disabled and we need to re-enable it because now we have money, do that
+    if((stats['misc']['cash'] > 0) && gameDisabled)
+    {
+        enableGame();
+    }
 }
 
 function updateAccountStats()
 {
     var elem = document.getElementById('playGameContainer');
+    elem.style.visibility = 'visible';
+
+    elem = document.getElementById('accountStatsContainer');
     elem.style.visibility = 'visible';
 
     elem = document.getElementById('buyGameButton');
@@ -161,16 +183,22 @@ function buy(productId)
 
 function stopAction(buttonName)
 {
+    //console.log("Stopping " + buttonName + ". Interval id: " + currentActionIntervalId);
     clearInterval(currentActionIntervalId);
-    var button = document.getElementById(buttonMap['playGame']);
-    button.value = "PLAY IT";
-    button.onclick = function() { beginFill("playGame"); }
-    var progressBarElem = document.getElementById(progressBarMap['playGame']);
+    var button = document.getElementById(buttonMap[buttonName]);
+    button.value = buttonStringMap[buttonName];
+    button.onclick = function() { beginFill(buttonName); }
+    var progressBarElem = document.getElementById(progressBarMap[buttonName]);
     progressBarElem.style.width = 0;
 }
 
 function beginFill(buttonName)
 {
+    // need to stop current action so that we can't have two things going at once
+    // (for now. we might support that later)
+    stopAction("playGame");
+    stopAction("work");
+
     // whatever we're doing, need to mark the button appropriately
     if(buttonName == "playGame")
     {
@@ -178,6 +206,13 @@ function beginFill(buttonName)
         var button = document.getElementById(buttonMap['playGame']);
         button.value = "TAKE A BREAK";
         button.onclick = function() { stopAction("playGame"); }
+    }
+    else if(buttonName == "work")
+    {
+        currentAction = 2;
+        var button = document.getElementById(buttonMap['work']);
+        button.value = "TAKE A BREAK";
+        button.onclick = function() { stopAction("work"); }
     }
 
     //var button = document.getElementById(buttonMap[buttonName]);
@@ -301,10 +336,63 @@ function processPlayGame()
     //button.disabled = false;
 }
 
+function processWork()
+{
+    stats['misc']['cash'] += 40;
+}
+
 function passTime()
 {
     // personal stat decay
     tickStatDecay();
+
+    // tick per cycle
+    ticksSinceLastCycle++;
+    if(ticksSinceLastCycle >= skTicksPerCycle)
+    {
+        tickCycle();
+    }
+}
+
+function getMonthlyCosts()
+{
+    return stats['costs']['living'];
+}
+
+function tickCycle()
+{
+    stats['misc']['cash'] -= getMonthlyCosts();
+    if(stats['misc']['cash'] < 0)
+    {
+        // we are now in the red
+        // we can't play the game until we can pay for electricity
+        disableGame();
+    }
+
+    ticksSinceLastCycle = 0;
+    stats['misc']['totalCyclesPlayed']++;
+}
+
+function disableGame()
+{
+    stopAction("playGame");
+    var button = document.getElementById(buttonMap['playGame']);
+    button.disabled = true;
+    gameDisabled = true;
+
+    // if this is the first time this has happened, then we need to show the employment section
+    if(stats['misc']['totalCyclesPlayed'] == 0)
+    {
+        var employDiv = document.getElementById('workContainer');
+        if(employDiv.style.visibility == "hidden") { employDiv.style.visibility = "visible"; }
+    }
+}
+
+function enableGame()
+{
+    var button = document.getElementById(buttonMap['playGame']);
+    button.disabled = false;
+    gameDisabled = false;
 }
 
 function tickStatDecay()
@@ -332,6 +420,10 @@ function procComplete(buttonName)
     {
         processPlayGame();
     }
+    else if(buttonName == "work")
+    {
+        processWork();
+    }
 
     // step 2 - pass time
     passTime();
@@ -344,7 +436,15 @@ function procComplete(buttonName)
     {
         case 1: // playing the game
         {
-            beginFill("playGame");
+            if( !gameDisabled )
+            {
+                beginFill("playGame");
+            }
+            break;
+        }
+        case 2:
+        {
+            beginFill("work");
             break;
         }
         default: // doing nothing, wait for player input

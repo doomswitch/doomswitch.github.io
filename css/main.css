@@ -20,4 +20,8 @@
 #playGameContainer {
 	visibility: hidden;
 }
+
+table {
+  border: 1px solid black;
+}
 </style>
