@@ -56,6 +56,7 @@ function initializeGame()
 
     stats['theGame'] = {};
     stats['theGame']['championPool'] = 10;
+    stats['theGame']['mmrTierBracket'] = 100;
 
     progressBarMap['playGame'] = "playGameProgressBar";
     progressBarMap['work'] = "workProgressBar";
@@ -152,7 +153,7 @@ function updateAccountStats()
     elem.innerText = stats['account']['gamesLost'];
 
     elem = document.getElementById('statsDisplayMMR');
-    elem.innerText = stats['account']['mmr'];
+    elem.innerText = stats['account']['mmr'] + "/" + stats['theGame']['mmrTierBracket'];
 }
 
 function updatePersonalStats()
@@ -164,10 +165,10 @@ function updatePersonalStats()
     elem.style.visibility = 'visible';
     
     elem = document.getElementById('statsDisplayLastHitting');
-    elem.innerText = stats['personal']['skills']['lastHitting'];
+    elem.innerText = stats['personal']['skills']['lastHitting'] + "/" + stats['personal']['skillcap'] * skMaxSkillPerCap;
 
     elem = document.getElementById('statsDisplaySkillshots');
-    elem.innerText = stats['personal']['skills']['skillshots'];
+    elem.innerText = stats['personal']['skills']['skillshots'] + "/" + stats['personal']['skillcap'] * skMaxSkillPerCap;
 }
 
 function buy(productId)
