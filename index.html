@@ -23,6 +23,13 @@
 		<tr>
 			<td>Cash:</td><td id="statsDisplayCash">$20</td>
 		</tr>
+		<tr id="statsDisplayRent" style="visibility: hidden;">
+			<td>Rent:</td><td id="statsDisplayRentCost"></td>
+			<td>Due in:</td><td id="statsDisplayRentDaysLeft"></td>
+		</tr>
+		<tr id="statsDisplayWork" style="visibility: hidden;">
+			<td>Income:</td><td id="statsDisplayIncome"></td>
+		</tr>
 	</table>
 </div>
 
@@ -51,6 +58,7 @@
 			    		<form action="" id="playGameFocus">
 			    			<input type="radio" name="playGameFocus" value="lastHitting">Last Hitting
 			    			<input type="radio" name="playGameFocus" value="skillshots">Skillshots
+			    			<input type="radio" name="playGameFocus" value="none">None
 			    		</form>
 			    	</td>
 			    </tr>

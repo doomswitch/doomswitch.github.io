@@ -27,7 +27,9 @@ function initializeGame()
     stats['misc']['accountActive'] = false;
     stats['misc']['totalGamesPlayed'] = 0;
     stats['misc']['totalCyclesPlayed'] = 0;
-    stats['misc']['wage'] = 500;
+
+    stats['work'] = {};
+    stats['work']['wage'] = 40;
     
     stats['account'] = {};
     stats['account']['gamesPlayed'] = 0;
@@ -70,6 +72,10 @@ function initializeGame()
     timeSinceLastImprovement['lastHitting'] = 0;
     timeSinceLastImprovement['skillshots'] = 0;
 
+    // tutorial stuff
+    stats['tutorial'] = {};
+    stats['tutorial']['firstRent'] = false;
+
     // load save stuff
 
     updateStats();
@@ -91,8 +97,7 @@ function getPersonalSkillRating()
 
 function updateStats()
 {
-    var cashDisplay = document.getElementById('statsDisplayCash');
-    cashDisplay.innerText = "$" + stats['misc']['cash'];
+    updateCashStats();
 
     if(stats['misc']['accountActive'] === true)
     {
@@ -109,6 +114,21 @@ function updateStats()
     {
         enableGame();
     }
+}
+
+function updateCashStats()
+{
+    var cashDisplay = document.getElementById('statsDisplayCash');
+    cashDisplay.innerText = "$" + stats['misc']['cash'];
+
+    var rentAmountDisplay = document.getElementById('statsDisplayRentCost');
+    rentAmountDisplay.innerText = "$" + stats['costs']['living'];
+
+    var rentDueInDisplay = document.getElementById('statsDisplayRentDaysLeft');
+    rentDueInDisplay.innerText = skTicksPerCycle - ticksSinceLastCycle;
+
+    var incomeDisplay = document.getElementById('statsDisplayIncome');
+    incomeDisplay.innerText = stats['work']['wage'];
 }
 
 function updateAccountStats()
@@ -259,21 +279,43 @@ function processImprovements()
 
     if(stats['personal']['improvementsEnabled'])
     {
+        // for now, we're increasing all stats by 1, unless you are focusing on a stat, in which case it will increase by 3
+        var skillCap = stats['personal']['skillcap'] * skMaxSkillPerCap;
+
         if(selectedFocus != null && selectedFocusValue != "")
         {
-            var skillCap = stats['personal']['skillcap'] * skMaxSkillPerCap;
             if(selectedFocusValue == "lastHitting") 
             { 
-                stats['personal']['skills']['lastHitting']++;
+                stats['personal']['skills']['lastHitting'] += 3;
                 if(stats['personal']['skills']['lastHitting'] >= skillCap) { stats['personal']['skills']['lastHitting'] = skillCap; }
                 timeSinceLastImprovement['lastHitting'] = 0;
             }
             else if(selectedFocusValue == "skillshots")
             {
-                stats['personal']['skills']['skillshots']++;
+                stats['personal']['skills']['skillshots'] += 3;
                 if(stats['personal']['skills']['skillshots'] >= skillCap) { stats['personal']['skills']['skillshots'] = skillCap; }
                 timeSinceLastImprovement['skillshots'] = 0;
             }
+            else if(selectedFocusValue == "none")
+            {
+                stats['personal']['skills']['lastHitting'] += 1;
+                if(stats['personal']['skills']['lastHitting'] >= skillCap) { stats['personal']['skills']['lastHitting'] = skillCap; }
+                timeSinceLastImprovement['lastHitting'] = 0;
+
+                stats['personal']['skills']['skillshots'] += 1;
+                if(stats['personal']['skills']['skillshots'] >= skillCap) { stats['personal']['skills']['skillshots'] = skillCap; }
+                timeSinceLastImprovement['skillshots'] = 0;
+            }
+        }
+        else
+        {
+            stats['personal']['skills']['lastHitting'] += 1;
+            if(stats['personal']['skills']['lastHitting'] >= skillCap) { stats['personal']['skills']['lastHitting'] = skillCap; }
+            timeSinceLastImprovement['lastHitting'] = 0;
+
+            stats['personal']['skills']['skillshots'] += 1;
+            if(stats['personal']['skills']['skillshots'] >= skillCap) { stats['personal']['skills']['skillshots'] = skillCap; }
+            timeSinceLastImprovement['skillshots'] = 0;
         }
     }
 }
@@ -338,7 +380,7 @@ function processPlayGame()
 
 function processWork()
 {
-    stats['misc']['cash'] += 40;
+    stats['misc']['cash'] += stats['work']['wage'];
 }
 
 function passTime()
@@ -367,6 +409,16 @@ function tickCycle()
         // we are now in the red
         // we can't play the game until we can pay for electricity
         disableGame();
+        if(stats['tutorial']['firstRent'] === false)
+        {
+            var rentContainer = document.getElementById("statsDisplayRent");
+            rentContainer.style.visibility = "visible";
+
+            var workContainer = document.getElementById("statsDisplayWork");
+            workContainer.style.visibility = "visible";
+
+            stats['tutorial']['firstRent'] = true;
+        }
     }
 
     ticksSinceLastCycle = 0;
