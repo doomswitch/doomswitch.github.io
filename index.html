@@ -1,122 +1,63 @@
-<!DOCTYPE html>
 <html>
 <head>
-	<link rel="stylesheet" href="css/main.css">
-	<script type="text/javascript" src="js/main.js"></script>
+<link rel="stylesheet" type="text/css" href="sim.css">
+<script src="sim.js"></script>
 </head>
-<body onload="initializeGame()">
 
-<div id="marketContainer" class="container">
-	BUY, BUY, BUY
-	<table>
-		<tr>
-			<td>
-				<button onclick="buy(1)" id="buyGameButton">Ancient Heroes: $20</button>
-			</td>
-		</tr>
-	</table>
-</div>
-
-<div id="statsContainer" class="container">
-	STATS
-	<table>
-		<tr>
-			<td>Cash:</td><td id="statsDisplayCash">$20</td>
-		</tr>
-		<tr id="statsDisplayRent" style="visibility: hidden;">
-			<td>Rent:</td><td id="statsDisplayRentCost"></td>
-			<td>Due in:</td><td id="statsDisplayRentDaysLeft"></td>
-		</tr>
-		<tr id="statsDisplayWork" style="visibility: hidden;">
-			<td>Income:</td><td id="statsDisplayIncome"></td>
-		</tr>
-	</table>
-</div>
-
-<div id="outerContainer" class="container" style="display: table;">
-	<div style="display: table-row;">
-		<div id="playGameContainer" class="container" style="display: table-cell;">
-			PLAY THE GAME
-			<table style="overflow: hidden;">
-				<tr>
-					<td>
-						<div id="barContainer">
-							<div id="progressContainer1" class="progressContainer">
-						  		<div id="playGameProgressBar" class="progressBar"></div>
-							</div>
-				    	</div>
-				    </td>
-				    <td>
-				    	<input type="button" onclick="beginFill('playGame')" style="display: inline;" id="playGameButton" value="PLAY IT" />
-				    </td>
-			    </tr>
-			    <tr id="chooseFocusRow" style="visibility: hidden;">
-			    	<td>
-			    		Choose a focus:
-			    	</td>
-			    	<td>
-			    		<form action="" id="playGameFocus">
-			    			<input type="radio" name="playGameFocus" value="lastHitting">Last Hitting
-			    			<input type="radio" name="playGameFocus" value="skillshots">Skillshots
-			    			<input type="radio" name="playGameFocus" value="none">None
-			    		</form>
-			    	</td>
-			    </tr>
-			</table>
+<body>
+	<div id="inputData">
+		<u>Global Settings</u><br />
+		Injury Penalties: <input type="checkbox" id="injuryPenalties" checked="true" /><br />
+		Number of Simulations: <input type="text" id="numSims" value=1000 /><br />
+		<br /><br />
+		<u>Monster Settings</u><br />
+		<button id="addMonster" onclick="addMonster()">Add Monster</button>
+		<div id="monsterContainer">
+			<div id="monsterStats0">
+				Health: <input type="text" id="monsterHealth0" value=3 />Action: <select id="monsterAction0">
+					<option value=1>Injure Random</option>
+					<option value=2>Injure All</option>
+					<option value=3>Heal 10</option>
+					<option value=4>Dodge (1)</option>
+				</select><button onclick="removeMonster(0)">Remove</button><br />
+			</div>
 		</div>
-		<div id="workContainer" class="container" style="display: table-cell; visibility: hidden;">
-			WORK FOR A LIVING
-			<table>
-				<tr>
-					<td>
-						<div id="barContainer">
-							<div id="workProgressContainer" class="progressContainer">
-								<div id="workProgressBar" class="progressBar"></div>
-							</div>
-						</div>
-					</td>
-					<td>
-						<input type="button" onclick="beginFill('work')" style="display: inline;" id="workButton" value="WORK" />
-					</td>
-				</tr>
-			</table>
+		<br />
+		<u>Party Settings</u><br />
+		Number of Characters:
+		<select id="partySize" onchange="changePartySize()">
+			<option value=1>1</option>
+			<option value=2>2</option>
+			<option value=3>3</option>
+			<option value=4>4</option>
+		</select>
+		<div id="characterContainer">
+			<div id="char0">
+				Character 1<br />
+				CP: <input type="text" id="cp0" value=2 /><br />
+				<!-- PC Speed: <input type="text" id="pcSpeed" value=3 /><br /> -->
+				HP: <input type="text" id="inj0" value=3 /><br />
+				<!-- Monster Speed: <input type="text" id="monsterSpeed" value=1 /><br /> -->
+			</div>
+			<div id="char1" style="display: none;">
+				Character 2<br />
+				CP: <input type="text" id="cp1" value=2 /><br />
+				HP: <input type="text" id="inj1" value=3 /><br />
+			</div>
+			<div id="char2" style="display: none;">
+				Character 3<br />
+				CP: <input type="text" id="cp2" value=2 /><br />
+				HP: <input type="text" id="inj2" value=3 /><br />
+			</div>
+			<div id="char3" style="display: none;">
+				Character 4<br />
+				CP: <input type="text" id="cp3" value=2 /><br />
+				HP: <input type="text" id="inj3" value=3 /><br />
+			</div>
 		</div>
+		<button id="run" onclick="runSims()">Run</button>
 	</div>
-
-	<div id="accountStatsContainer" class="container" style="visibility: hidden; display: table-row;">
-		<div style="display: table-cell;">
-			ACCOUNT STATS
-			<table>
-				<tr>
-					<td>Games played:</td><td id="statsDisplayGamesPlayed">0</td>
-				</tr>
-				<tr>
-					<td>Games won:</td><td id="statsDisplayGamesWon">0</td>
-				</tr>
-				<tr>
-					<td>Games lost:</td><td id="statsDisplayGamesLost">0</td>
-				</tr>
-				<tr>
-					<td>Matchmaking Rating:</td><td id="statsDisplayMMR">0</td>
-				</tr>
-			</table>
-		</div>
+	<div id="results">Result:
+		<div id="result"></div>
 	</div>
-
-	<div id="personalStatsContainer" class="container" style="visibility: hidden; display: table-row;">
-		<div style="display: table-cell;">
-			PERSONAL STATS
-			<table>
-				<tr>
-					<td>Last Hitting skill:</td><td id="statsDisplayLastHitting">0</td>
-				</tr>
-				<tr>
-					<td>Skillshots skill:</td><td id="statsDisplaySkillshots">0</td>
-				</tr>
-			</table>
-		</div>
-	</div>
-</div>
-
-</body>
 </html>
