@@ -15,13 +15,12 @@ var monsterDivIds = [0];
 var characters = {};
 
 // monster data
-// structure: {id: {baseHealth, currentHealth} }
+// structure: {id: {baseHealth, currentHealth, action} }
 var monsters = {};
 
 // values from forms
 var accountForInjuries = false;
 var partySize = 1;
-var numMonsters = 1;
 
 function getTotalMonsterHealth() {
   var total = 0;
@@ -155,7 +154,7 @@ function runSims() {
       // this is fine, just means we lost
     }
     else {
-      // we returned a non-bool, which means we hit our outer safety. bail immediately so we don't nuke our browser
+      // we returned a non-bool, which means we hit our safety checks. bail immediately so we don't nuke our browser
       break;
     }
     
@@ -172,7 +171,12 @@ function runSims() {
   if(ret === -1)
   {
     // we hit our safety
-    document.getElementById("result").innerHTML = "ERROR: We hit our safety check, which usually means a fight took more than 100 full turns. So as not to nuke your browser, we bailed on the test early.";
+    document.getElementById("result").innerHTML = "ERROR: We hit our safety check, which usually means a fight took more than 100 full rounds. So as not to nuke your browser, we bailed on the test early. This can mean, for example, you set it up such that monsters always heal for more damage than characters can possibly deal. Or they infinitely dodge, etc.";
+  }
+  else if(ret === -2)
+  {
+    // inner safety
+    document.getElementById("result").innerHTML = "ERROR: We hit our turn limit safety, which means a single round took more than 100 turns. This usually means something in the code caused a real bad bug. Please give the parameters of your sim to Dan so he can check this out.";
   }
   else
   {
@@ -262,7 +266,7 @@ function runSingleSim(goingFirst) {
     while(turnClock.length != 0)
     {
       safetyCheck++;
-      if(safetyCheck > 100) { console.log("inner safety"); break; }
+      if(safetyCheck > 100) { console.log("inner safety"); return -2; }
       
       if(turnClock[0] < partySize)
       {
